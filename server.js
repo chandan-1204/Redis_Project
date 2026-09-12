@@ -4,6 +4,7 @@ const cors = require('cors');
 const redis = require('redis');
 
 const redisclient = redis.createClient();
+redisclient.on('error', (error) => console.error('Redis error:', error.message));
 const DEFAULT_EXPIRATION=3600
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -17,7 +18,9 @@ app.get('/screenshots', async (req, res) => {
         {params: { albumId }}
     );
     console.log(data);
-    redisclient.setex('screenshots', DEFAULT_EXPIRATION, JSON.stringify(data));
+    if (redisclient.isReady) {
+        await redisclient.setEx('screenshots', DEFAULT_EXPIRATION, JSON.stringify(data));
+    }
 
     res.json(data);
 });
