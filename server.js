@@ -18,8 +18,13 @@ app.get('/screenshots', async (req, res) => {
         {params: { albumId }}
     );
     console.log(data);
-    if (redisclient.isReady) {
+    try {
+        if (!redisclient.isOpen) {
+            await redisclient.connect();
+        }
         await redisclient.setEx('screenshots', DEFAULT_EXPIRATION, JSON.stringify(data));
+    } catch (error) {
+        console.error('Unable to cache screenshots:', error.message);
     }
 
     res.json(data);
